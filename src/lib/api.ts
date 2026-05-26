@@ -9,7 +9,9 @@
 // Falls back to the production Heroku URL when the env var is unset.
 // (NEXT_PUBLIC_API_URL is inlined client-side by Next.js, so this works
 // in both server and browser contexts.)
-const DEFAULT_API_URL = 'https://marakbi-e0870d98592a.herokuapp.com/';
+// const DEFAULT_API_URL = 'https://marakbi-e0870d98592a.herokuapp.com/';
+const DEFAULT_API_URL = 'http://127.0.0.1:8787';
+
 export const BASE_URL =
   (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) ||
   DEFAULT_API_URL;
@@ -90,6 +92,7 @@ export interface Boat {
   name: string;
   description: string;
   categories: string[];
+  activities?: string[];
   cities?: string[];
   images: string[];
   price_per_hour: number;
@@ -142,6 +145,7 @@ export interface AddBoatData {
   show_guests_badge?: boolean;
   categories: number[];
   cities: number[];
+  activities?: number[];
   trips?: number[];
   // Per-trip custom price overrides (parallel to `trips`, same index).
   // Use null/undefined at an index to mean "use the trip's default total_price".
@@ -166,6 +170,7 @@ export interface EditBoatData {
   show_guests_badge?: boolean;
   categories?: number[];
   cities?: number[];
+  activities?: number[];
   trips?: number[];
   // Per-trip custom price overrides (parallel to `trips`, same index).
   // Use null/undefined at an index to mean "use the trip's default total_price".
@@ -1154,6 +1159,9 @@ export interface AdminBoat {
   services_full?: BoatServiceAssignment[];
   show_guests_badge?: boolean;
   facilities?: BoatFacilityDef[];
+  activities?: string[];
+  activities_id?: number[];
+  activities_full?: { id: number; name: string; image: string | null }[];
 }
 
 export interface AdminTrip {
@@ -1197,6 +1205,14 @@ export interface AdminCategory {
   name: string;
   image: string | null;
   boats_count?: number;
+}
+
+export interface AdminActivity {
+  id: number;
+  name: string;
+  image: string | null;
+  boats_count?: number;
+  created_at?: string;
 }
 
 export interface AdminGroup {
@@ -1377,6 +1393,9 @@ export const adminApi = {
     if (boatData.facilities) {
       formData.append('facilities', JSON.stringify(boatData.facilities));
     }
+    if (boatData.activities) {
+      formData.append('activities', JSON.stringify(boatData.activities));
+    }
 
     if (boatData.primary_new_image_index !== undefined) {
       formData.append('primary_new_image_index', boatData.primary_new_image_index.toString());
@@ -1425,6 +1444,9 @@ export const adminApi = {
     if (boatData.facilities) {
       formData.append('facilities', JSON.stringify(boatData.facilities));
     }
+    if (boatData.activities) {
+      formData.append('activities', JSON.stringify(boatData.activities));
+    }
 
     if (boatData.primary_image_url) formData.append('primary_image_url', boatData.primary_image_url);
     if (boatData.primary_new_image_index !== undefined) {
@@ -1470,6 +1492,32 @@ export const adminApi = {
     return adminFormRequest(`/admin/categories/${categoryId}`, formData, 'PUT');
   },
   deleteCategory: async (categoryId: number): Promise<ApiResponse<{ message: string }>> => apiRequest(`/admin/categories/${categoryId}`, { method: 'DELETE' }),
+
+  // Activities
+  getActivities: async (): Promise<ApiResponse<{ activities: AdminActivity[] }>> => apiRequest('/admin/activities'),
+  createActivity: async (name: string, image?: File): Promise<ApiResponse<AdminActivity>> => {
+    let imageUrl: string | undefined;
+    if (image) {
+      const { uploadToCloudinary } = await import('./cloudinaryUpload');
+      imageUrl = await uploadToCloudinary(image, 'daffa/activities');
+    }
+    const formData = new FormData();
+    formData.append('name', name);
+    if (imageUrl) formData.append('image_url', imageUrl);
+    return adminFormRequest('/admin/activities', formData);
+  },
+  updateActivity: async (activityId: number, name?: string, image?: File): Promise<ApiResponse<AdminActivity>> => {
+    let imageUrl: string | undefined;
+    if (image) {
+      const { uploadToCloudinary } = await import('./cloudinaryUpload');
+      imageUrl = await uploadToCloudinary(image, 'daffa/activities');
+    }
+    const formData = new FormData();
+    if (name) formData.append('name', name);
+    if (imageUrl) formData.append('image_url', imageUrl);
+    return adminFormRequest(`/admin/activities/${activityId}`, formData, 'PUT');
+  },
+  deleteActivity: async (activityId: number): Promise<ApiResponse<{ message: string }>> => apiRequest(`/admin/activities/${activityId}`, { method: 'DELETE' }),
 
   // Cities
   getCities: async (): Promise<ApiResponse<{ cities: { id: number; name: string; created_at: string }[] }>> => apiRequest('/admin/cities'),

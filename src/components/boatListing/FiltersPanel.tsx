@@ -44,18 +44,17 @@ export default function FiltersPanel({
   boats
 }: FiltersPanelProps) {
 
-  // Boat categories: Motor Boat, Felucca, Occasion, Sharing (exclude Travel, Fishing, and Water Activities)
-  // Activity categories: Water Activities, Fishing
-  const boatCategories = ['Motor Boat', 'Felucca', 'Occasion', 'Sharing'];
-  const activityCategories = ['Water Activities', 'Fishing'];
-
-  // Get boat types - always show all categories (not conditional)
+  // Dynamically extract unique boat types from boat.categories
   const getBoatTypes = () => {
-    // Always return all boat categories, regardless of whether they exist in current boats
-    return boatCategories.map(name => ({
-      name,
-      count: boats.filter(boat => boat.categories?.includes(name)).length
-    })).sort((a, b) => a.name.localeCompare(b.name));
+    const typeMap = new Map<string, number>();
+    boats.forEach(boat => {
+      boat.categories?.forEach(cat => {
+        typeMap.set(cat, (typeMap.get(cat) || 0) + 1);
+      });
+    });
+    return Array.from(typeMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const boatTypes = getBoatTypes();
@@ -78,12 +77,17 @@ export default function FiltersPanel({
 
   const cabins = getCabins();
 
-  // Get activities - always show all activity categories (not conditional)
+  // Dynamically extract unique activities from boat.activities
   const getActivities = () => {
-    return activityCategories.map(name => ({
-      name,
-      count: boats.filter(boat => boat.categories?.includes(name)).length
-    })).sort((a, b) => a.name.localeCompare(b.name));
+    const actMap = new Map<string, number>();
+    boats.forEach(boat => {
+      boat.activities?.forEach(act => {
+        actMap.set(act, (actMap.get(act) || 0) + 1);
+      });
+    });
+    return Array.from(actMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const activities = getActivities();
@@ -218,44 +222,91 @@ export default function FiltersPanel({
             </div>
 
             {/* Slider */}
-            <div className="relative h-1 bg-[#030213] rounded-full">
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border border-[#030213] rounded-full shadow-md cursor-pointer z-10"
-                style={{ left: `calc(${(priceRange[0] / maxPrice) * 100}% - 8px)` }}
-              />
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border border-[#030213] rounded-full shadow-md cursor-pointer z-10"
-                style={{ left: `calc(${(priceRange[1] / maxPrice) * 100}% - 8px)` }}
-              />
-              <input
-                type="range"
-                min="0"
-                max={maxPrice}
-                step="50"
-                value={priceRange[0]}
-                onChange={(e) =>
-                  setPriceRange([
-                    Math.min(Number(e.target.value), priceRange[1]),
-                    priceRange[1],
-                  ])
+            {(() => {
+              const leftPct = (priceRange[0] / maxPrice) * 100;
+              const rightPct = (priceRange[1] / maxPrice) * 100;
+
+              // Compute value from a pointer event relative to the track
+              const getValueFromEvent = (e: React.MouseEvent | MouseEvent, track: HTMLElement) => {
+                const rect = track.getBoundingClientRect();
+                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                const step = 50;
+                return Math.round((pct * maxPrice) / step) * step;
+              };
+
+              // Start dragging the thumb closest to the click
+              const handlePointerDown = (e: React.MouseEvent<HTMLDivElement>) => {
+                const track = e.currentTarget;
+                const clickedValue = getValueFromEvent(e, track);
+
+                // Determine which thumb is closest
+                const distToMin = Math.abs(clickedValue - priceRange[0]);
+                const distToMax = Math.abs(clickedValue - priceRange[1]);
+                const dragging: 'min' | 'max' = distToMin <= distToMax ? 'min' : 'max';
+
+                // Apply immediately
+                if (dragging === 'min') {
+                  setPriceRange([Math.min(clickedValue, priceRange[1]), priceRange[1]]);
+                } else {
+                  setPriceRange([priceRange[0], Math.max(clickedValue, priceRange[0])]);
                 }
-                className="absolute top-0 left-0 w-full h-1 bg-transparent appearance-none cursor-pointer z-20 opacity-0"
-              />
-              <input
-                type="range"
-                min="0"
-                max={maxPrice}
-                step="50"
-                value={priceRange[1]}
-                onChange={(e) =>
-                  setPriceRange([
-                    priceRange[0],
-                    Math.max(Number(e.target.value), priceRange[0]),
-                  ])
-                }
-                className="absolute top-0 left-0 w-full h-1 bg-transparent appearance-none cursor-pointer z-20 opacity-0"
-              />
-            </div>
+
+                // Track current range in a mutable ref-like closure
+                let current: [number, number] = dragging === 'min'
+                  ? [Math.min(clickedValue, priceRange[1]), priceRange[1]]
+                  : [priceRange[0], Math.max(clickedValue, priceRange[0])];
+
+                const onMove = (ev: MouseEvent) => {
+                  const val = getValueFromEvent(ev, track);
+                  if (dragging === 'min') {
+                    const clamped = Math.min(val, current[1]);
+                    current = [clamped, current[1]];
+                  } else {
+                    const clamped = Math.max(val, current[0]);
+                    current = [current[0], clamped];
+                  }
+                  setPriceRange([...current]);
+                };
+
+                const onUp = () => {
+                  document.removeEventListener('mousemove', onMove);
+                  document.removeEventListener('mouseup', onUp);
+                };
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+              };
+
+              return (
+                <div
+                  className="relative h-2 rounded-full cursor-pointer select-none"
+                  style={{ background: '#e5e7eb' }}
+                  onMouseDown={handlePointerDown}
+                >
+                  {/* Active range (colored segment between thumbs) */}
+                  <div
+                    className="absolute top-0 h-full rounded-full"
+                    style={{
+                      left: `${leftPct}%`,
+                      width: `${rightPct - leftPct}%`,
+                      background: '#030213',
+                    }}
+                  />
+
+                  {/* Left Thumb */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[#030213] rounded-full shadow-md z-10 pointer-events-none"
+                    style={{ left: `calc(${leftPct}% - 10px)` }}
+                  />
+
+                  {/* Right Thumb */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[#030213] rounded-full shadow-md z-10 pointer-events-none"
+                    style={{ left: `calc(${rightPct}% - 10px)` }}
+                  />
+                </div>
+              );
+            })()}
 
             <div className="flex items-center justify-between text-xs font-poppins font-normal text-[#717182]">
               <span>EGP 0</span>

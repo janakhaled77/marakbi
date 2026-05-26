@@ -115,30 +115,28 @@ export default function BoatListingLayout() {
 
   // Boat categories: Motor Boat, Felucca, Occasion, Sharing (exclude Travel, Fishing, and Water Activities)
   // Activity categories: Water Activities, Fishing
-  const boatCategories = ['Motor Boat', 'Felucca', 'Occasion', 'Sharing'];
-  const activityCategories = ['Water Activities', 'Fishing'];
+  // const boatCategories = ['Motor Boat', 'Felucca', 'Occasion', 'Sharing'];
+  // const activityCategories = ['Water Activities', 'Fishing'];
 
   // Extract unique boat types (only boats, not activities or travel)
   const getUniqueBoatTypes = () => {
     const types = new Set<string>();
     allBoats.forEach(boat => {
       boat.categories?.forEach(cat => {
-        if (boatCategories.includes(cat)) {
-          types.add(cat);
-        }
+
+        types.add(cat);
+
       });
     });
     return Array.from(types).sort();
   };
 
-  // Extract unique activities (Water Activities and Fishing)
+  // Extract unique activities from the new activities field
   const getUniqueActivities = () => {
     const types = new Set<string>();
     allBoats.forEach(boat => {
-      boat.categories?.forEach(cat => {
-        if (activityCategories.includes(cat)) {
-          types.add(cat);
-        }
+      boat.activities?.forEach(act => {
+        types.add(act);
       });
     });
     return Array.from(types).sort();
@@ -187,10 +185,10 @@ export default function BoatListingLayout() {
       );
     }
 
-    // Activities filter (only activity categories)
+    // Activities filter (uses the dedicated activities field)
     if (selectedActivities.length > 0) {
       filtered = filtered.filter(boat =>
-        boat.categories?.some(cat => selectedActivities.includes(cat))
+        boat.activities?.some(act => selectedActivities.includes(act))
       );
     }
 
@@ -347,14 +345,9 @@ export default function BoatListingLayout() {
             const category = categories.find((cat: { id: number }) => cat.id === parseInt(categoryId));
             if (category) {
               const categoryName = (category as { name: string }).name;
-              // Reset first, then set the new category
-              setSelectedBoatTypes([]);
+              // Categories now always represent boat types
+              setSelectedBoatTypes([categoryName]);
               setSelectedActivities([]);
-              if (boatCategories.includes(categoryName)) {
-                setSelectedBoatTypes([categoryName]);
-              } else if (activityCategories.includes(categoryName)) {
-                setSelectedActivities([categoryName]);
-              }
             }
           }
         } catch (error) {

@@ -1,5 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 interface BadgeService {
   service_id: number;
@@ -57,6 +59,24 @@ const BoatCard = ({ boatId, imageUrl, name, category, price, location, guests, s
     });
   }
   const hasBadges = effectiveBadges.length > 0;
+
+  // Tooltip state: render as fixed overlay so it escapes the card's overflow-hidden
+  const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
+  const tooltipTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showTooltip = useCallback((e: React.MouseEvent, text: string) => {
+    if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setTooltip({
+      text,
+      x: rect.left + rect.width / 2,
+      y: rect.top,
+    });
+  }, []);
+
+  const hideTooltip = useCallback(() => {
+    tooltipTimeout.current = setTimeout(() => setTooltip(null), 100);
+  }, []);
 
   const cardContent = (
     <div className="relative z-0 w-96 h-[473px] mb-2 bg-white rounded-2xl shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] overflow-hidden hover:shadow-xl transition-shadow" style={{ fontFamily: 'Poppins, sans-serif' }}>
@@ -179,7 +199,12 @@ const BoatCard = ({ boatId, imageUrl, name, category, price, location, guests, s
                 }
                 const badge = item.badge!;
                 return (
-                  <div key={badge.service_id} className="flex items-center gap-1 group/tip relative">
+                  <div
+                    key={badge.service_id}
+                    className="flex items-center gap-1 relative cursor-default"
+                    onMouseEnter={(e) => badge.service?.description && showTooltip(e, badge.service.description)}
+                    onMouseLeave={hideTooltip}
+                  >
                     <div className="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden relative">
                       {badge.service?.icon_url ? (
                         <Image
@@ -196,13 +221,6 @@ const BoatCard = ({ boatId, imageUrl, name, category, price, location, guests, s
                     <span className="text-black text-sm font-normal" style={{ fontFamily: 'Poppins, sans-serif' }}>
                       {badge.badge_display_name || badge.service?.name || 'Service'}
                     </span>
-                    {/* Tooltip */}
-                    {badge.service?.description && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-50 max-w-[200px] text-center">
-                        {badge.service.description}
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -210,6 +228,25 @@ const BoatCard = ({ boatId, imageUrl, name, category, price, location, guests, s
           </>
         )}
       </div>
+
+      {/* Fixed Tooltip — portaled to document.body so it escapes overflow-hidden */}
+      {tooltip && typeof window !== 'undefined' && createPortal(
+        <div
+          className="fixed px-3 py-2 bg-gray-900 text-white text-xs rounded-lg text-center pointer-events-none"
+          style={{
+            zIndex: 99999,
+            left: tooltip.x,
+            top: tooltip.y,
+            transform: 'translate(-50%, -100%) translateY(-8px)',
+            maxWidth: 220,
+            wordBreak: 'break-word',
+          }}
+        >
+          {tooltip.text}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { adminApi, AdminBoat, AdminCategory, AdminUser, AdminReview, BoatServiceAssignment, BoatServiceDef, BoatFacilityDef } from "@/lib/api";
+import { adminApi, AdminBoat, AdminCategory, AdminActivity, AdminUser, AdminReview, BoatServiceAssignment, BoatServiceDef, BoatFacilityDef } from "@/lib/api";
 import { FiEdit2, FiTrash2, FiSearch, FiImage, FiX, FiUpload, FiEye, FiUsers, FiAnchor, FiCalendar, FiStar, FiMapPin, FiDownload, FiMap, FiCheck, FiChevronLeft, FiChevronRight, FiHelpCircle, FiPlay, FiDollarSign } from "react-icons/fi";
 import Image from "next/image";
 import { useToast } from "../../ToastProvider";
@@ -29,6 +29,7 @@ interface BoatFormData {
   facilities: BoatFacilityDef[];
   video_urls: string[];
   removed_videos: string[];
+  activities: number[];
 }
 interface BoatStats {
   total_fleet: number;
@@ -57,6 +58,7 @@ export default function AdminBoatListingLayout() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [allActivities, setAllActivities] = useState<AdminActivity[]>([]);
   const [cities, setCities] = useState<{ id: number; name: string }[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [trips, setTrips] = useState<any[]>([]);
@@ -449,6 +451,13 @@ export default function AdminBoatListingLayout() {
     }
   };
 
+  const fetchActivities = async () => {
+    const response = await adminApi.getActivities();
+    if (response.success && response.data) {
+      setAllActivities(response.data.activities);
+    }
+  };
+
   const fetchTrips = async () => {
     const response = await adminApi.getTrips(1, 1000);
     if (response.success && response.data) {
@@ -518,6 +527,7 @@ export default function AdminBoatListingLayout() {
     fetchUsers();
     fetchStats();
     fetchRealStats();
+    fetchActivities();
   }, [fetchBoats]);
 
   // Handle URL parameters - auto-open Add Boat modal when action=add&user=X
@@ -547,6 +557,7 @@ export default function AdminBoatListingLayout() {
         facilities: [],
         video_urls: [],
         removed_videos: [],
+        activities: [],
       });
       setNewImages([]);
       setImagePreviews([]);
@@ -576,6 +587,7 @@ export default function AdminBoatListingLayout() {
       facilities: [],
       video_urls: [],
       removed_videos: [],
+      activities: [],
     });
     setNewImages([]);
     setImagePreviews([]);
@@ -632,6 +644,7 @@ export default function AdminBoatListingLayout() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         video_urls: (data as any).video_urls || [],
         removed_videos: [],
+        activities: data.activities_id || [],
       });
       setImagePreviews(data.images || []);
 
@@ -761,6 +774,7 @@ export default function AdminBoatListingLayout() {
       primary_new_image_index: !primaryExistingUrl ? primaryNewImageIndex : undefined,
       services: formData.services,
       facilities: formData.facilities.map(f => f.id),
+      activities: formData.activities,
       video_urls: formData.video_urls.length > 0 ? formData.video_urls : undefined,
       removed_videos: formData.removed_videos.length > 0 ? formData.removed_videos : undefined,
     };
@@ -1434,6 +1448,42 @@ export default function AdminBoatListingLayout() {
                         </div>
                       </div>
 
+                      {/* Activities — multi-select */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Activities
+                          <span className="text-gray-400 font-normal text-xs ml-1">(select one or more)</span>
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {allActivities.map((act) => {
+                            const selected = formData.activities.includes(act.id);
+                            return (
+                              <button
+                                key={act.id}
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    activities: selected
+                                      ? prev.activities.filter(id => id !== act.id)
+                                      : [...prev.activities, act.id]
+                                  }));
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${selected
+                                    ? "bg-gray-900 text-white border-gray-900"
+                                    : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                                  }`}
+                              >
+                                {act.name}
+                              </button>
+                            );
+                          })}
+                          {allActivities.length === 0 && (
+                            <p className="text-xs text-gray-400">No activities created yet. Add them from the Activities tab.</p>
+                          )}
+                        </div>
+                      </div>
+
                       {/* Price Mode */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Pricing Model *</label>
@@ -1467,44 +1517,44 @@ export default function AdminBoatListingLayout() {
 
                       {/* Price Value (Hour) — hidden when the boat is priced Per Day only */}
                       {formData.price_mode !== 'per_day' && (
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          {formData.price_mode === 'per_person' ? 'Price per Person (EGP)' :
-                            formData.price_mode === 'per_person_per_time' ? 'Price per Person/Hour (EGP)' :
-                              'Price per Hour (EGP)'}
-                          {formData.price_mode === 'per_time' && (
-                            <span className="text-gray-400 font-normal text-xs ml-1">(Optional if day price set)</span>
-                          )}
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.price_per_hour || ''}
-                          onChange={(e) => setFormData({ ...formData, price_per_hour: e.target.value ? Number(e.target.value) : null })}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
-                          min="0"
-                          placeholder="e.g. 500"
-                        />
-                      </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            {formData.price_mode === 'per_person' ? 'Price per Person (EGP)' :
+                              formData.price_mode === 'per_person_per_time' ? 'Price per Person/Hour (EGP)' :
+                                'Price per Hour (EGP)'}
+                            {formData.price_mode === 'per_time' && (
+                              <span className="text-gray-400 font-normal text-xs ml-1">(Optional if day price set)</span>
+                            )}
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.price_per_hour || ''}
+                            onChange={(e) => setFormData({ ...formData, price_per_hour: e.target.value ? Number(e.target.value) : null })}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                            min="0"
+                            placeholder="e.g. 500"
+                          />
+                        </div>
                       )}
 
                       {/* Price Value (Day) — hidden when the boat is priced Per Hour only */}
                       {formData.price_mode !== 'per_hour' && (
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Price per Day (EGP)
-                          {formData.price_mode === 'per_time' && (
-                            <span className="text-gray-400 font-normal text-xs ml-1">(Optional if hour price set)</span>
-                          )}
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.price_per_day || ''}
-                          onChange={(e) => setFormData({ ...formData, price_per_day: e.target.value ? Number(e.target.value) : null })}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
-                          min="0"
-                          placeholder="e.g. 5000"
-                        />
-                      </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Price per Day (EGP)
+                            {formData.price_mode === 'per_time' && (
+                              <span className="text-gray-400 font-normal text-xs ml-1">(Optional if hour price set)</span>
+                            )}
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.price_per_day || ''}
+                            onChange={(e) => setFormData({ ...formData, price_per_day: e.target.value ? Number(e.target.value) : null })}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                            min="0"
+                            placeholder="e.g. 5000"
+                          />
+                        </div>
                       )}
 
                       {/* Location (Cities) */}
