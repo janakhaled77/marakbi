@@ -12,7 +12,7 @@ import { BASE_URL } from './api';
  * @returns Normalized absolute URL
  */
 export function normalizeImageUrl(
-  imageUrl: any,
+  imageUrl: unknown,
   baseUrl: string = BASE_URL
 ): string {
   // Return placeholder if no image
@@ -21,9 +21,10 @@ export function normalizeImageUrl(
   }
 
   // Handle media objects returned from the backend (e.g. { url: 'https://...', type: 'image' })
-  let url = imageUrl;
-  if (typeof imageUrl === 'object') {
-    url = imageUrl.url || imageUrl.image_url || null;
+  let url: unknown = imageUrl;
+  if (typeof imageUrl === 'object' && imageUrl !== null) {
+    const mediaObj = imageUrl as { url?: unknown; image_url?: unknown };
+    url = mediaObj.url || mediaObj.image_url || null;
   }
 
   if (typeof url !== 'string') {
@@ -58,7 +59,7 @@ export function normalizeImageUrl(
  * @returns Array of normalized URLs
  */
 export function normalizeImageUrls(
-  images: (string | undefined | null)[] | undefined | null,
+  images: unknown[] | undefined | null,
   baseUrl?: string
 ): string[] {
   if (!images || !Array.isArray(images)) {
@@ -66,7 +67,7 @@ export function normalizeImageUrls(
   }
 
   const normalized = images
-    .filter((img): img is string => Boolean(img))
+    .filter((img): img is NonNullable<unknown> => img !== null && img !== undefined)
     .map(img => normalizeImageUrl(img, baseUrl));
 
   // If no valid images, return placeholder
@@ -81,7 +82,7 @@ export function normalizeImageUrls(
  * @returns First image URL or placeholder
  */
 export function getFirstImage(
-  images: (string | undefined | null)[] | undefined | null,
+  images: unknown[] | undefined | null,
   baseUrl?: string
 ): string {
   const normalized = normalizeImageUrls(images, baseUrl);
