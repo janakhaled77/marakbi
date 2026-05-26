@@ -37,6 +37,11 @@ interface BookingSidebarProps {
     setSelectedServiceIds: React.Dispatch<React.SetStateAction<Set<number>>>;
     servicePersonCounts: Map<number, number>;
     setServicePersonCounts: React.Dispatch<React.SetStateAction<Map<number, number>>>;
+    // Children pricing props
+    childrenAllowed?: boolean;
+    childPrice?: number | null;
+    minChildAge?: number;
+    maxChildAge?: number;
 }
 
 export interface SelectedServiceItem {
@@ -87,6 +92,10 @@ export default function BookingSidebar({
     setSelectedServiceIds,
     servicePersonCounts,
     setServicePersonCounts,
+    childrenAllowed = true,
+    childPrice = null,
+    minChildAge = 0,
+    maxChildAge = 12,
 }: BookingSidebarProps) {
     // Restore previous selections from Zustand store (e.g. when navigating back from payment)
     const getStoredBooking = () => {
@@ -485,6 +494,22 @@ export default function BookingSidebar({
             }
         }
 
+        // Children pricing calculation
+        let childrenTotal = 0;
+        if (includeChildren && childrenCount > 0 && childPrice && childPrice > 0) {
+            if (priceMode === 'per_person') {
+                childrenTotal = childPrice * childrenCount;
+            } else if (priceMode === 'per_person_per_time') {
+                if (rentalType === 'day') {
+                    childrenTotal = childPrice * childrenCount * (days || 1);
+                } else {
+                    childrenTotal = childPrice * childrenCount * (calculatedHours || 1);
+                }
+            }
+            // For per_time / per_trip modes, no extra charge for children
+        }
+        basePrice += childrenTotal;
+
         // Calculate selected services total
         let servicesTotal = 0;
         const selectedServicesArr: SelectedServiceItem[] = [];
@@ -495,12 +520,15 @@ export default function BookingSidebar({
             const svcPriceMode = svc?.price_mode || 'per_trip';
             let calculatedSvcPrice = 0;
 
-            // Determine person count: use custom count if per_person_all_required is false
             const perPersonAllRequired = svcAssign.per_person_all_required !== false;
             const isPerPerson = svcPriceMode === 'per_person' || svcPriceMode === 'per_person_per_time';
-            const svcPersonCount = (!perPersonAllRequired && isPerPerson)
-                ? (servicePersonCounts.get(svcAssign.service_id) ?? guestCount)
-                : guestCount;
+            const maxPeople = guestCount + (includeChildren ? childrenCount : 0);
+            let svcPersonCount = (!perPersonAllRequired && isPerPerson)
+                ? (servicePersonCounts.get(svcAssign.service_id) ?? maxPeople)
+                : maxPeople;
+            if (svcPersonCount > maxPeople) {
+                svcPersonCount = maxPeople;
+            }
 
             if (svcPriceMode === 'per_trip') {
                 calculatedSvcPrice = svcPrice;
@@ -527,10 +555,10 @@ export default function BookingSidebar({
         const serviceFee = Math.round(totalBeforeFee * serviceFeeRate);
         const total = totalBeforeFee + serviceFee;
 
-        return { basePrice, serviceFee, total, days, calculatedHours, servicesTotal, selectedServicesArr };
+        return { basePrice, serviceFee, total, days, calculatedHours, servicesTotal, selectedServicesArr, childrenTotal };
     };
 
-    const { basePrice, serviceFee, total, days, calculatedHours, servicesTotal, selectedServicesArr } = calculatePrice();
+    const { basePrice, serviceFee, total, days, calculatedHours, servicesTotal, selectedServicesArr, childrenTotal } = calculatePrice();
 
     // Calendar helpers
     const getDaysInMonth = (date: Date) => {
@@ -1095,21 +1123,30 @@ export default function BookingSidebar({
                         {guestCount}
                     </span>
                     <button
-                        onClick={() => setGuestCount(Math.min(maxGuests, guestCount + 1))}
-                        className="text-stone-900 text-xl font-medium"
+                        onClick={() => setGuestCount(Math.min(maxGuests - (includeChildren ? childrenCount : 0), guestCount + 1))}
+                        className={`text-stone-900 text-xl font-medium ${guestCount >= maxGuests - (includeChildren ? childrenCount : 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={guestCount >= maxGuests - (includeChildren ? childrenCount : 0)}
                     >
                         +
                     </button>                </div>
             </div>
 
-            {/* Children (0-12) */}
+            {childrenAllowed !== false && (
             <div className="mb-6">
                 <label
-                    className="flex items-center gap-2 cursor-pointer mb-3"
-                    onClick={() => {
-                        setIncludeChildren(!includeChildren);
-                        if (includeChildren) setChildrenCount(0);
-                        else setChildrenCount(1);
+                    className={`flex items-center gap-2 mb-3 ${(!includeChildren && guestCount >= maxGuests) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    onClick={(e) => {
+                        if (!includeChildren && guestCount >= maxGuests) {
+                            e.preventDefault();
+                            return;
+                        }
+                        const newIncludeChildren = !includeChildren;
+                        setIncludeChildren(newIncludeChildren);
+                        if (newIncludeChildren) {
+                            setChildrenCount(1);
+                        } else {
+                            setChildrenCount(0);
+                        }
                     }}
                 >
                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
@@ -1121,8 +1158,11 @@ export default function BookingSidebar({
                             </svg>
                         )}
                     </div>
-                    <span className="text-stone-700 text-sm font-normal font-poppins">Children (0–12)</span>
+                    <span className="text-stone-700 text-sm font-normal font-poppins">Children ({minChildAge}–{maxChildAge} years)</span>
                 </label>
+                {(!includeChildren && guestCount >= maxGuests) && (
+                    <p className="text-xs text-amber-600 mb-3 -mt-2">Cannot add children, max capacity reached</p>
+                )}
                 {includeChildren && (
                     <>
                         <label className="flex items-center gap-2 text-stone-700 text-sm font-normal font-poppins mb-3">
@@ -1144,15 +1184,20 @@ export default function BookingSidebar({
                                 {childrenCount}
                             </span>
                             <button
-                                onClick={() => setChildrenCount(childrenCount + 1)}
+                                onClick={() => setChildrenCount(Math.min(Math.max(1, maxGuests - guestCount), childrenCount + 1))}
                                 className="text-stone-900 text-xl font-medium"
+                                disabled={childrenCount >= Math.max(0, maxGuests - guestCount)}
                             >
                                 +
                             </button>
                         </div>
+                        {childrenCount >= Math.max(0, maxGuests - guestCount) && (
+                            <p className="text-xs text-amber-600 mt-1">Max capacity reached ({maxGuests} total seats)</p>
+                        )}
                     </>
                 )}
             </div>
+            )}
 
             {/* Optional Services */}
             {boatServices.length > 0 && (
@@ -1187,7 +1232,11 @@ export default function BookingSidebar({
                                     const isPerPerson = svc.price_mode === 'per_person' || svc.price_mode === 'per_person_per_time';
                                     const perPersonAllRequired = svcAssign.per_person_all_required !== false;
                                     const showPersonPicker = isPerPerson && !perPersonAllRequired;
-                                    const currentPersonCount = servicePersonCounts.get(svcAssign.service_id) ?? guestCount;
+                                    const maxPeople = guestCount + (includeChildren ? childrenCount : 0);
+                                    let currentPersonCount = servicePersonCounts.get(svcAssign.service_id) ?? maxPeople;
+                                    if (currentPersonCount > maxPeople) {
+                                        currentPersonCount = maxPeople;
+                                    }
 
                                     return (
                                         <div key={svcAssign.service_id} className="border border-[#0F3875] bg-blue-50/30 rounded-lg overflow-hidden">
@@ -1242,11 +1291,11 @@ export default function BookingSidebar({
                                                             onClick={() => {
                                                                 setServicePersonCounts(prev => {
                                                                     const next = new Map(prev);
-                                                                    next.set(svcAssign.service_id, Math.min(guestCount, currentPersonCount + 1));
+                                                                    next.set(svcAssign.service_id, Math.min(maxPeople, currentPersonCount + 1));
                                                                     return next;
                                                                 });
                                                             }}
-                                                            disabled={currentPersonCount >= guestCount}
+                                                            disabled={currentPersonCount >= maxPeople}
                                                             className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-sm font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
                                                         >
                                                             +
@@ -1267,9 +1316,20 @@ export default function BookingSidebar({
                         {breakdownLabel()}
                     </span>
                     <span className="text-stone-900 text-sm font-medium font-poppins">
-                        EGP {Math.round(basePrice)}
+                        EGP {Math.round(basePrice - (childrenTotal || 0))}
                     </span>
                 </div>
+                {/* Children price breakdown */}
+                {includeChildren && childrenCount > 0 && childPrice && childPrice > 0 && (childrenTotal || 0) > 0 && (
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-zinc-500 text-sm font-normal font-poppins">
+                            EGP {Math.round(childPrice)} × {childrenCount} {childrenCount === 1 ? 'child' : 'children'}{priceMode === 'per_person_per_time' ? (rentalType === 'day' ? ` × ${days} days` : ` × ${calculatedHours} hrs`) : ''}
+                        </span>
+                        <span className="text-stone-900 text-sm font-medium font-poppins">
+                            EGP {Math.round(childrenTotal || 0)}
+                        </span>
+                    </div>
+                )}
                 {servicesTotal > 0 && (
                     <div className="mb-2">
                         <div className="flex justify-between items-center mb-1">

@@ -481,6 +481,42 @@ export default function BookingDetailsPage() {
                                     </>
                                 )}
 
+                                {/* Children price breakdown */}
+                                {order.children_count && order.children_count > 0 && order.child_price_snapshot != null && order.child_price_snapshot > 0 && (
+                                    <>
+                                        <div className="flex justify-between text-sm pt-2 border-t border-gray-100">
+                                            <span className="text-gray-500">Children</span>
+                                            <span className="font-medium text-gray-900">
+                                                {formatCurrency(
+                                                    (() => {
+                                                        const priceMode = order.price_mode || order.boat?.price_mode || 'per_time';
+                                                        if (priceMode === 'per_person_per_time') {
+                                                            return order.children_count * order.child_price_snapshot * durationHours;
+                                                        }
+                                                        return order.children_count * order.child_price_snapshot;
+                                                    })()
+                                                )}
+                                            </span>
+                                        </div>
+
+                                        {/* Detailed Children Calculation */}
+                                        <div className="flex justify-between text-xs text-gray-400 px-2 gap-1 mb-2">
+                                            <span>{formatCurrency(order.child_price_snapshot)}</span>
+                                            {(() => {
+                                                const priceMode = order.price_mode || order.boat?.price_mode || 'per_time';
+                                                return (
+                                                    <>
+                                                        <span>× {order.children_count} child{order.children_count > 1 ? 'ren' : ''}</span>
+                                                        {priceMode === 'per_person_per_time' && (
+                                                            <span>× {durationText}</span>
+                                                        )}
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    </>
+                                )}
+
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500">Service Fee</span>
                                     <span className="font-medium text-gray-900">{formatCurrency(order.service_fee || 0)}</span>
@@ -546,6 +582,15 @@ export default function BookingDetailsPage() {
                             <div className="text-center py-4 bg-blue-50 rounded-xl border border-blue-100">
                                 <span className="block text-3xl font-bold text-[#106BD8] mb-1">{order.guest_count}</span>
                                 <span className="text-sm text-blue-600 font-medium">People</span>
+                                {order.children_count && order.children_count > 0 && (
+                                    <div className="mt-2 pt-2 border-t border-blue-200">
+                                        <span className="text-lg font-bold text-[#106BD8]">{order.children_count}</span>
+                                        <span className="text-sm text-blue-600 font-medium ml-1">{order.children_count === 1 ? 'Child' : 'Children'}</span>
+                                        {order.child_price_snapshot != null && order.child_price_snapshot > 0 && (
+                                            <p className="text-xs text-blue-400 mt-0.5">{formatCurrency(order.child_price_snapshot)} per child</p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 

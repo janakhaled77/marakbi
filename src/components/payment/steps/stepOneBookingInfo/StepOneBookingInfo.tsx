@@ -81,7 +81,10 @@ export default function StepOneBookingInfo() {
                 {!!bookingData.days && (
                   <p>Duration: {String(bookingData.days)} day{Number(bookingData.days) > 1 ? 's' : ''}</p>
                 )}
-                <p>Guests: {String(bookingData.guest_count)} / {String(bookingData.max_seats)}</p>
+                <p>Adults: {String(bookingData.guest_count)}</p>
+                {!!bookingData.children_count && Number(bookingData.children_count) > 0 && (
+                  <p>Children: {String(bookingData.children_count)}</p>
+                )}
                 <p className="text-sm">
                   {new Date(String(bookingData.start_date)).toLocaleDateString('en-US', {
                     weekday: 'short',

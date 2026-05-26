@@ -12,7 +12,7 @@ import { BASE_URL } from './api';
  * @returns Normalized absolute URL
  */
 export function normalizeImageUrl(
-  imageUrl: string | undefined | null,
+  imageUrl: any,
   baseUrl: string = BASE_URL
 ): string {
   // Return placeholder if no image
@@ -20,23 +20,34 @@ export function normalizeImageUrl(
     return '/images/carousel1.webp'; // Default placeholder
   }
 
-  // Already a full Cloudinary URL
-  if (imageUrl.startsWith('https://res.cloudinary.com/')) {
-    return imageUrl;
+  // Handle media objects returned from the backend (e.g. { url: 'https://...', type: 'image' })
+  let url = imageUrl;
+  if (typeof imageUrl === 'object') {
+    url = imageUrl.url || imageUrl.image_url || null;
   }
 
-  // Already a full HTTP/HTTPS URL (including Heroku)
-  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    return imageUrl;
+  if (typeof url !== 'string') {
+    console.warn('normalizeImageUrl received non-string:', imageUrl);
+    return '/images/carousel1.webp';
+  }
+
+  // Already a full Cloudinary URL
+  if (url.startsWith('https://res.cloudinary.com/')) {
+    return url;
+  }
+
+  // Already a full HTTP/HTTPS URL (including backend)
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
   }
 
   // Relative path - prepend base URL
-  if (imageUrl.startsWith('/')) {
-    return `${baseUrl}${imageUrl}`;
+  if (url.startsWith('/')) {
+    return `${baseUrl}${url}`;
   }
 
   // No leading slash - add it
-  return `${baseUrl}/${imageUrl}`;
+  return `${baseUrl}/${url}`;
 }
 
 /**

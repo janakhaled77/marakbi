@@ -205,7 +205,13 @@ export default function TripDetails() {
           />
           <TripDetailsCellItem
             Icon={MdOutlineGroups2}
-            description={`${String(bookingData.guest_count)} Guest${Number(bookingData.guest_count) > 1 ? 's' : ''}`}
+            description={(() => {
+              const adults = `${String(bookingData.guest_count)} Adult${Number(bookingData.guest_count) !== 1 ? 's' : ''}`;
+              const children = bookingData.children_count && Number(bookingData.children_count) > 0
+                ? `, ${String(bookingData.children_count)} Child${Number(bookingData.children_count) !== 1 ? 'ren' : ''}`
+                : '';
+              return `${adults}${children}`;
+            })()}
           />
         </div>
       </TripDetailsCell>

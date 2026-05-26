@@ -71,7 +71,8 @@ export default function StepThreePaymentInfo() {
           contact_first_name: bookingData.contact_first_name as string,
           contact_last_name: bookingData.contact_last_name as string,
           contact_phone: bookingData.contact_phone as string,
-          booking_notes: bookingData.booking_notes as string
+          booking_notes: bookingData.booking_notes as string,
+          children_count: (bookingData.children_count as number) || 0
         };
         response = await clientApi.bookTrip(bookingData.trip_id as number, tripBookingData);
       } else {
@@ -94,7 +95,8 @@ export default function StepThreePaymentInfo() {
           contact_first_name: bookingData.contact_first_name as string,
           contact_last_name: bookingData.contact_last_name as string,
           contact_phone: bookingData.contact_phone as string,
-          booking_notes: bookingData.booking_notes as string
+          booking_notes: bookingData.booking_notes as string,
+          children_count: (bookingData.children_count as number) || 0
         };
         response = await customerApi.createOrder(orderData);
       }
@@ -147,7 +149,10 @@ export default function StepThreePaymentInfo() {
       <div className="bg-gray-50 p-4 rounded-lg mb-6">
         <h3 className="font-semibold mb-2 font-poppins">Booking Summary</h3>
         <p className="text-sm text-gray-600">Boat: {String(bookingData.boat_name || '')}</p>
-        <p className="text-sm text-gray-600">Guests: {String(bookingData.guest_count || 0)}</p>
+        <p className="text-sm text-gray-600">Adults: {String(bookingData.guest_count || 0)}</p>
+        {!!bookingData.children_count && Number(bookingData.children_count) > 0 && (
+          <p className="text-sm text-gray-600">Children: {String(bookingData.children_count)}</p>
+        )}
 
         <p className="text-sm text-gray-600">
           Rental Type: {

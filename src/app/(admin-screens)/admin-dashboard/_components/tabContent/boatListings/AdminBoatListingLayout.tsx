@@ -30,6 +30,11 @@ interface BoatFormData {
   video_urls: string[];
   removed_videos: string[];
   activities: number[];
+  // Children pricing
+  children_allowed: boolean;
+  child_price: number | null;
+  min_child_age: number;
+  max_child_age: number;
 }
 interface BoatStats {
   total_fleet: number;
@@ -287,6 +292,10 @@ export default function AdminBoatListingLayout() {
     video_urls: [],
     removed_videos: [],
     activities: [],
+    children_allowed: true,
+    child_price: null,
+    min_child_age: 0,
+    max_child_age: 12,
   });
 
   // Inline facility creation state
@@ -559,6 +568,10 @@ export default function AdminBoatListingLayout() {
         video_urls: [],
         removed_videos: [],
         activities: [],
+        children_allowed: true,
+        child_price: null,
+        min_child_age: 0,
+        max_child_age: 12,
       });
       setNewImages([]);
       setImagePreviews([]);
@@ -589,6 +602,10 @@ export default function AdminBoatListingLayout() {
       video_urls: [],
       removed_videos: [],
       activities: [],
+      children_allowed: true,
+      child_price: null,
+      min_child_age: 0,
+      max_child_age: 12,
     });
     setNewImages([]);
     setImagePreviews([]);
@@ -646,6 +663,10 @@ export default function AdminBoatListingLayout() {
         video_urls: (data as any).video_urls || [],
         removed_videos: [],
         activities: data.activities_id || [],
+        children_allowed: data.children_allowed !== false,
+        child_price: data.child_price ?? null,
+        min_child_age: data.min_child_age ?? 0,
+        max_child_age: data.max_child_age ?? 12,
       });
       setImagePreviews(data.images || []);
 
@@ -778,6 +799,10 @@ export default function AdminBoatListingLayout() {
       activities: formData.activities,
       video_urls: formData.video_urls.length > 0 ? formData.video_urls : undefined,
       removed_videos: formData.removed_videos.length > 0 ? formData.removed_videos : undefined,
+      children_allowed: formData.children_allowed,
+      child_price: formData.child_price,
+      min_child_age: formData.min_child_age,
+      max_child_age: formData.max_child_age,
     };
 
     let response;
@@ -1649,6 +1674,66 @@ export default function AdminBoatListingLayout() {
                           min="1"
                         />
                       </div>
+                    </div>
+
+                    {/* Children Settings */}
+                    <div className="mt-6 p-5 rounded-xl border border-gray-200 bg-gray-50/50">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-900">Children Settings</h4>
+                          <p className="text-xs text-gray-500 mt-0.5">Configure child pricing and age range for this boat</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.children_allowed}
+                            onChange={(e) => setFormData(prev => ({ ...prev, children_allowed: e.target.checked }))}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <span className="ms-2 text-sm font-medium text-gray-700">{formData.children_allowed ? 'Allowed' : 'Not Allowed'}</span>
+                        </label>
+                      </div>
+                      {formData.children_allowed && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Price per Child (EGP)</label>
+                            <input
+                              type="number"
+                              value={formData.child_price ?? ''}
+                              onChange={(e) => setFormData(prev => ({ ...prev, child_price: e.target.value ? Number(e.target.value) : null }))}
+                              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-sm"
+                              min="0"
+                              placeholder="e.g. 100"
+                            />
+                            <p className="text-[10px] text-gray-400 mt-1">Leave empty for no extra charge</p>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Min Child Age</label>
+                            <input
+                              type="number"
+                              value={formData.min_child_age}
+                              onChange={(e) => setFormData(prev => ({ ...prev, min_child_age: Number(e.target.value) }))}
+                              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-sm"
+                              min="0"
+                              max={formData.max_child_age}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Max Child Age</label>
+                            <input
+                              type="number"
+                              value={formData.max_child_age}
+                              onChange={(e) => setFormData(prev => ({ ...prev, max_child_age: Number(e.target.value) }))}
+                              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-sm"
+                              min={formData.min_child_age}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {!formData.children_allowed && (
+                        <p className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">Children are not allowed for this boat/activity.</p>
+                      )}
                     </div>
 
                     {/* Description */}

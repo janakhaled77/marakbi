@@ -181,6 +181,11 @@ export default function BoatDetailsPage() {
     }
   }, [params.id, fetchSameRecs, fetchOtherRecs, fetchReviews]);
 
+  // Scroll to top of the page when boat ID changes (e.g. on navigation to details)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [params.id]);
+
   // Handle keyboard navigation for image modal
   useEffect(() => {
     if (!isModalOpen || !boatData) return;
@@ -1262,7 +1267,7 @@ export default function BoatDetailsPage() {
               pricePerHour={boat.price_per_hour}
               pricePerDay={boat.price_per_day}
               maxGuests={boat.max_seats}
-              serviceFeeRate={0.03}
+              serviceFeeRate={boatData?.service_fee_rate ?? 0.01}
               onBookingRequest={handleRequestToBook}
               isTripBooking={!!selectedTrip}
               tripDuration={selectedTrip?.voyage_hours}
@@ -1275,6 +1280,10 @@ export default function BoatDetailsPage() {
               setSelectedServiceIds={setSelectedServiceIds}
               servicePersonCounts={servicePersonCounts}
               setServicePersonCounts={setServicePersonCounts}
+              childrenAllowed={boat.children_allowed}
+              childPrice={boat.child_price}
+              minChildAge={boat.min_child_age}
+              maxChildAge={boat.max_child_age}
             />
             </div>
           </div>

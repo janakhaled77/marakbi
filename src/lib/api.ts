@@ -127,6 +127,11 @@ export interface Boat {
     is_primary: boolean;
     thumbnail_url: string;
   }>;
+  // Children pricing
+  children_allowed?: boolean;
+  child_price?: number | null;
+  min_child_age?: number;
+  max_child_age?: number;
 }
 
 // ... (omitted unrelated parts)
@@ -155,6 +160,11 @@ export interface AddBoatData {
   primary_new_image_index?: number;
   services?: BoatServiceAssignment[];
   facilities?: number[];
+  // Children pricing
+  children_allowed?: boolean;
+  child_price?: number | null;
+  min_child_age?: number;
+  max_child_age?: number;
 }
 
 export interface EditBoatData {
@@ -183,6 +193,11 @@ export interface EditBoatData {
   primary_new_image_index?: number;
   services?: BoatServiceAssignment[];
   facilities?: number[];
+  // Children pricing
+  children_allowed?: boolean;
+  child_price?: number | null;
+  min_child_age?: number;
+  max_child_age?: number;
 }
 
 
@@ -298,6 +313,7 @@ export interface TripBookingRequest {
   contact_last_name?: string;
   contact_phone?: string;
   booking_notes?: string;
+  children_count?: number;
 }
 
 export interface TripBookingResponse {
@@ -490,6 +506,9 @@ export interface Order {
     person_count?: number | null;
   }>;
   services_total?: number;
+  // Children
+  children_count?: number;
+  child_price_snapshot?: number | null;
 }
 
 
@@ -1133,6 +1152,9 @@ export interface AdminOrder {
     person_count?: number | null;
   }>;
   services_total?: number;
+  // Children
+  children_count?: number;
+  child_price_snapshot?: number | null;
 }
 
 export interface AdminBoat {
@@ -1162,6 +1184,11 @@ export interface AdminBoat {
   activities?: string[];
   activities_id?: number[];
   activities_full?: { id: number; name: string; image: string | null }[];
+  // Children pricing
+  children_allowed?: boolean;
+  child_price?: number | null;
+  min_child_age?: number;
+  max_child_age?: number;
 }
 
 export interface AdminTrip {
@@ -1396,6 +1423,11 @@ export const adminApi = {
     if (boatData.activities) {
       formData.append('activities', JSON.stringify(boatData.activities));
     }
+    // Children pricing fields
+    if (boatData.children_allowed !== undefined) formData.append('children_allowed', boatData.children_allowed.toString());
+    if (boatData.child_price !== undefined) formData.append('child_price', boatData.child_price === null ? 'null' : boatData.child_price.toString());
+    if (boatData.min_child_age !== undefined) formData.append('min_child_age', boatData.min_child_age.toString());
+    if (boatData.max_child_age !== undefined) formData.append('max_child_age', boatData.max_child_age.toString());
 
     if (boatData.primary_new_image_index !== undefined) {
       formData.append('primary_new_image_index', boatData.primary_new_image_index.toString());
@@ -1447,6 +1479,11 @@ export const adminApi = {
     if (boatData.activities) {
       formData.append('activities', JSON.stringify(boatData.activities));
     }
+    // Children pricing fields
+    if (boatData.children_allowed !== undefined) formData.append('children_allowed', boatData.children_allowed.toString());
+    if (boatData.child_price !== undefined) formData.append('child_price', boatData.child_price === null ? 'null' : boatData.child_price.toString());
+    if (boatData.min_child_age !== undefined) formData.append('min_child_age', boatData.min_child_age.toString());
+    if (boatData.max_child_age !== undefined) formData.append('max_child_age', boatData.max_child_age.toString());
 
     if (boatData.primary_image_url) formData.append('primary_image_url', boatData.primary_image_url);
     if (boatData.primary_new_image_index !== undefined) {

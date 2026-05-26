@@ -353,7 +353,12 @@ export default function OrderDetailsModal({
                                             <span className="text-gray-400"> / {order.voyage_max_seats} total</span>
                                         </span>
                                     ) : (
-                                        `${order.guest_count} people`
+                                        <>
+                                            {order.guest_count} people
+                                            {order.children_count && order.children_count > 0 ? (
+                                                <span className="text-gray-500 ml-1">({order.children_count} children)</span>
+                                            ) : null}
+                                        </>
                                     )}
                                 </p>
                             </div>
@@ -389,6 +394,35 @@ export default function OrderDetailsModal({
                                     )}
                                     <span>× {duration} {unit}{duration > 1 ? 's' : ''}</span>
                                 </div>
+                                {order.children_count && order.children_count > 0 && order.child_price_snapshot != null && order.child_price_snapshot > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-dashed border-gray-200">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-sm text-gray-600 font-medium">Children Rate</span>
+                                            <span className="text-sm font-bold text-gray-900">
+                                                {formatCurrency(
+                                                    (() => {
+                                                        const priceMode = order.price_mode || 'per_time';
+                                                        if (priceMode === 'per_person_per_time') {
+                                                            return order.children_count * order.child_price_snapshot * duration;
+                                                        }
+                                                        return order.children_count * order.child_price_snapshot;
+                                                    })()
+                                                )}
+                                            </span>
+                                        </div>
+                                        <div className="text-xs text-gray-500 flex justify-end gap-1">
+                                            <span>{formatCurrency(order.child_price_snapshot)}</span>
+                                            <span>× {order.children_count} child{order.children_count > 1 ? 'ren' : ''}</span>
+                                            {(() => {
+                                                const priceMode = order.price_mode || 'per_time';
+                                                if (priceMode === 'per_person_per_time') {
+                                                    return <span>× {duration} {unit}{duration > 1 ? 's' : ''}</span>;
+                                                }
+                                                return null;
+                                            })()}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                         <div className="space-y-2">
