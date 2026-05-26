@@ -286,6 +286,7 @@ export default function AdminBoatListingLayout() {
     facilities: [],
     video_urls: [],
     removed_videos: [],
+    activities: [],
   });
 
   // Inline facility creation state
