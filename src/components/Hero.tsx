@@ -1,10 +1,12 @@
 "use client"
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { clientApi, City } from '@/lib/api';
-import toast from 'react-hot-toast';
+// import { useRouter } from 'next/navigation';
+import type { City } from '@/lib/api';
+// import { clientApi } from '@/lib/api';
+// import toast from 'react-hot-toast';
 
+// BOOKING FORM — temporarily disabled (re-enable renders + state below)
 interface BookingFormProps {
   city: string;
   setCity: (value: string) => void;
@@ -106,40 +108,46 @@ const BookingForm = ({
   );
 };
 
+// ─── Mobile hero CTA (easy undo / switch) ─────────────────────────────────
+// 'button'    → show سجل دلوقتي pinned at bottom of hero (current)
+// 'image-map' → hide button; use invisible tap zone on lower image (uncomment block in JSX)
+// 'none'      → no mobile CTA (original behaviour)
+const MOBILE_HERO_CTA_MODE = 'button' as 'button' | 'image-map' | 'none';
+
 const Hero = () => {
-  const router = useRouter();
-  const [city, setCity] = useState('');
-  const [voyageType, setVoyageType] = useState(''); // 'hourly_daily' or 'trip_based'
-  const [passengers, setPassengers] = useState(1);
-  const [cities, setCities] = useState<City[]>([]);
-  const [loadingCities, setLoadingCities] = useState(true);
+  // const router = useRouter();
+  // const [city, setCity] = useState('');
+  // const [voyageType, setVoyageType] = useState(''); // 'hourly_daily' or 'trip_based'
+  // const [passengers, setPassengers] = useState(1);
+  // const [cities, setCities] = useState<City[]>([]);
+  // const [loadingCities, setLoadingCities] = useState(true);
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Hero carousel background images
   const backgroundImages = [
     "/images/hero-1.webp",
-    "/images/hero-2.webp",
-    "/images/hero-3.webp"
+    "/images/caranaval2.webp",
+    "/images/carnaval.webp"
   ];
 
   // Load cities on mount (no auth required)
-  useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        setLoadingCities(true);
-        const response = await clientApi.getCities();
-        if (response.success && response.data) {
-          setCities(response.data.cities);
-        }
-      } catch (error) {
-        console.error('Error fetching cities:', error);
-      } finally {
-        setLoadingCities(false);
-      }
-    };
-    fetchCities();
-  }, []);
+  // useEffect(() => {
+  //   const fetchCities = async () => {
+  //     try {
+  //       setLoadingCities(true);
+  //       const response = await clientApi.getCities();
+  //       if (response.success && response.data) {
+  //         setCities(response.data.cities);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching cities:', error);
+  //     } finally {
+  //       setLoadingCities(false);
+  //     }
+  //   };
+  //   fetchCities();
+  // }, []);
 
   // Timer for image gallery animation - slower (5 seconds)
   useEffect(() => {
@@ -156,40 +164,41 @@ const Hero = () => {
   };
 
   // Handle Book Now button
-  const handleBookNow = () => {
-    if (!city || !voyageType) {
-      toast.error("Please select both a City and a Voyage Type to proceed.");
-      return;
-    }
-
-    const params = new URLSearchParams();
-    if (city) params.append('city_id', city);
-    if (passengers > 0) params.append('min_passengers', passengers.toString());
-
-    if (voyageType === 'trip_based') {
-      router.push(`/trip-listing${params.toString() ? `?${params.toString()}` : ''}`);
-    } else {
-      // Default to boat listing for hourly/daily
-      router.push(`/boat-listing${params.toString() ? `?${params.toString()}` : ''}`);
-    }
-  };
+  // const handleBookNow = () => {
+  //   if (!city || !voyageType) {
+  //     toast.error("Please select both a City and a Voyage Type to proceed.");
+  //     return;
+  //   }
+  //
+  //   const params = new URLSearchParams();
+  //   if (city) params.append('city_id', city);
+  //   if (passengers > 0) params.append('min_passengers', passengers.toString());
+  //
+  //   if (voyageType === 'trip_based') {
+  //     router.push(`/trip-listing${params.toString() ? `?${params.toString()}` : ''}`);
+  //   } else {
+  //     // Default to boat listing for hourly/daily
+  //     router.push(`/boat-listing${params.toString() ? `?${params.toString()}` : ''}`);
+  //   }
+  // };
 
   // Handle Explore Now button
   const handleExploreNow = () => {
-    router.push('/boat-listing');
+    // router.push('/boat-listing');
+    window.open('https://forms.gle/TLfn5qntLsMcmG4N8', '_blank', 'noopener,noreferrer');
   };
 
-  const bookingFormProps: BookingFormProps = {
-    city,
-    setCity,
-    cities,
-    loadingCities,
-    voyageType,
-    setVoyageType,
-    passengers,
-    setPassengers,
-    onBook: handleBookNow,
-  };
+  // const bookingFormProps: BookingFormProps = {
+  //   city,
+  //   setCity,
+  //   cities,
+  //   loadingCities,
+  //   voyageType,
+  //   setVoyageType,
+  //   passengers,
+  //   setPassengers,
+  //   onBook: handleBookNow,
+  // };
 
   // Non-breaking space (renders as blank but, unlike a normal space, does not collapse)
   const NBSP = String.fromCharCode(160);
@@ -218,15 +227,15 @@ const Hero = () => {
             priority
             quality={90}
           />
-          {/* Mobile-only legibility gradient so white text stays readable over any image */}
-          <div className="sm:hidden absolute inset-0 bg-gradient-to-b from-black/40 via-black/15 to-black/40" />
+          {/* Mobile gradient removed so banner artwork (e.g. carnaval) stays fully visible */}
+          {/* <div className="sm:hidden absolute inset-0 bg-gradient-to-b from-black/40 via-black/15 to-black/40" /> */}
         </div>
 
-        {/* Content */}
-        <div className="relative w-full h-auto sm:h-200 flex items-start sm:items-center px-0 sm:px-4 pt-30 pb-8 sm:pt-0 sm:pb-0">
+        {/* Content — desktop/tablet text overlay; on mobile keep minimal top padding so banner art stays visible */}
+        <div className="relative w-full h-auto sm:h-200 flex items-start sm:items-center px-0 sm:px-4 pt-4 pb-24 sm:pt-0 sm:pb-0 pointer-events-none">
           <div className="w-full px-4 sm:px-8 md:px-16 flex flex-col lg:flex-row justify-between items-center lg:items-start gap-6 sm:gap-8 lg:gap-32">
-            {/* Left Side: Text Content */}
-            <div className="flex flex-col text-left w-full lg:w-auto">
+            {/* Left Side: Text Content — hidden on mobile so hero artwork stays visible */}
+            <div className="hidden sm:flex flex-col text-left w-full lg:w-auto">
               <div className="text-orange-300 text-3xl sm:text-3xl lg:text-4xl font-normal font-['SignPainter'] capitalize leading-tight">
                 With DAFFA
               </div>
@@ -234,12 +243,6 @@ const Hero = () => {
                 Your Dream Boats
               </div>
               <div className="text-white text-3xl sm:text-4xl lg:text-6xl font-bold font-poppins capitalize leading-tight sm:leading-tight lg:leading-[68px] mb-6 sm:mb-12 lg:mb-16">
-                {/* Phone keeps the real headline */}
-                <span className="sm:hidden">
-                  <span className="text-white">Most Reliable<br /></span>
-                  <span className="text-white">Luxury Boats </span>
-                  <span className="text-orange-300">Rentals</span>
-                </span>
                 {/* PC: headline blanked out (one &nbsp; per original letter) so the 2-line block keeps its exact
                     footprint and nothing below it shifts. Non-selectable + no pointer/keyboard interaction. */}
                 <span className="hidden sm:inline select-none pointer-events-none" aria-hidden="true">
@@ -250,18 +253,41 @@ const Hero = () => {
               </div>
               <button
                 onClick={handleExploreNow}
-                className="hidden sm:flex w-56 h-12 px-6 py-2.5 bg-[#0C4A8C] rounded-lg justify-center items-center gap-2.5 text-white text-base font-normal font-poppins mx-auto lg:mx-0 clickable hover:bg-[#0A3D7A] transition-colors"
+                className="hidden sm:flex w-56 h-12 px-6 py-2.5 bg-[#0C4A8C] rounded-lg justify-center items-center gap-2.5 text-white text-base font-normal font-poppins mx-auto lg:mx-0 clickable hover:bg-[#0A3D7A] transition-colors pointer-events-auto"
               >
-                Explore Now
+                سجل دلوقتي
               </button>
             </div>
 
             {/* Right Side: Booking Form — desktop/tablet only (mobile shows it below the hero) */}
-            <div className="hidden sm:block w-80">
+            {/* <div className="hidden sm:block w-80">
               <BookingForm {...bookingFormProps} />
-            </div>
+            </div> */}
           </div>
         </div>
+
+        {/* MOBILE CTA — pinned button (sits in letterbox below contained image, minimal overlap) */}
+        {MOBILE_HERO_CTA_MODE === 'button' && (
+          <div className="sm:hidden absolute bottom-5 left-0 right-0 z-20 flex justify-center px-6">
+            <button
+              type="button"
+              onClick={handleExploreNow}
+              className="w-full max-w-xs h-12 px-6 py-2.5 bg-[#0C4A8C]/95 rounded-lg flex justify-center items-center text-white text-base font-medium font-poppins shadow-lg hover:bg-[#0A3D7A] transition-colors"
+            >
+              سجل دلوقتي
+            </button>
+          </div>
+        )}
+
+        {/* MOBILE CTA — image map alternative (set MOBILE_HERO_CTA_MODE to 'image-map' and comment button block above) */}
+        {MOBILE_HERO_CTA_MODE === 'image-map' && (
+          <button
+            type="button"
+            onClick={handleExploreNow}
+            aria-label="سجل دلوقتي"
+            className="sm:hidden absolute bottom-0 left-0 right-0 h-[40%] z-20 cursor-pointer bg-transparent border-0 p-0"
+          />
+        )}
 
         {/* Wave transition — blends hero bottom into the white section below */}
         <div className="hidden sm:block absolute bottom-0 left-0 w-full z-10">
@@ -315,7 +341,7 @@ const Hero = () => {
                   onClick={() => handleImageClick(1)}
                 >
                   <Image
-                    src="/images/hero-2.webp"
+                    src="/images/caranaval2.webp"
                     alt="Featured activity 2"
                     width={176}
                     height={160}
@@ -336,7 +362,7 @@ const Hero = () => {
                   onClick={() => handleImageClick(2)}
                 >
                   <Image
-                    src="/images/hero-3.webp"
+                    src="/images/carnaval.webp"
                     alt="Featured activity 3"
                     width={176}
                     height={160}
@@ -357,12 +383,12 @@ const Hero = () => {
       </section>
 
       {/* Mobile-only Booking Form — sits one full screen below the hero image */}
-      <section className="sm:hidden bg-[#0C4A8C] px-4 py-8">
+      {/* <section className="sm:hidden bg-[#0C4A8C] px-4 py-8">
         <h2 className="text-white text-xl font-medium font-poppins capitalize mb-4 text-center">
           Find Your Boat
         </h2>
         <BookingForm {...bookingFormProps} />
-      </section>
+      </section> */}
     </>
   );
 };
