@@ -15,11 +15,11 @@ const Hero = () => {
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // Background images that correspond to the featured activities
+  // Hero carousel background images
   const backgroundImages = [
-    "/images/Rectangle 3463841.webp", // Felucca background
-    "/images/Rectangle 3463845.webp", // Fishing background  
-    "/images/Rectangle 3463846.webp"  // Kayak background
+    "/images/hero-1.webp",
+    "/images/hero-2.webp",
+    "/images/hero-3.webp"
   ];
 
   // Load cities on mount (no auth required)
