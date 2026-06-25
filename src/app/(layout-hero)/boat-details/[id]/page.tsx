@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { clientApi, BoatDetails as ApiBoatDetails, Trip, BASE_URL, BoatServiceAssignment, Boat, BoatReview, storage } from "@/lib/api";
 import BookingSidebar, { BookingData } from "@/components/BookingSidebar";
+import BoatActivitiesSection, { resolveBoatActivities } from "@/components/boatDetails/BoatActivitiesSection";
 import useBookingStore from "@/hooks/useBookingStore";
 import { normalizeImageUrl, normalizeImageUrls } from "@/lib/imageUtils";
 import { FiClock, FiMapPin, FiPlay } from "react-icons/fi";
@@ -862,6 +863,9 @@ export default function BoatDetailsPage() {
                 )}
               </section>
             )}
+
+            <BoatActivitiesSection activities={resolveBoatActivities(boat)} />
+
             <section>
               <h2 className="text-2xl font-semibold mb-4 font-poppins">Meet Your Captain</h2>
               <div className="bg-gray-50 rounded-lg p-6">

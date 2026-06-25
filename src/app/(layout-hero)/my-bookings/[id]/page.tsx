@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { customerApi, Order } from "@/lib/api";
+import { customerApi, Order, clientApi, BoatActivityItem } from "@/lib/api";
 import { normalizeImageUrl } from "@/lib/imageUtils";
+import BoatActivitiesSection, { resolveBoatActivities } from "@/components/boatDetails/BoatActivitiesSection";
 import {
     FiClock,
     FiCalendar,
@@ -30,6 +31,7 @@ export default function BookingDetailsPage() {
     const [error, setError] = useState("");
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [currentBoatImageIndex, setCurrentBoatImageIndex] = useState(0); // For Boat Slider
+    const [boatActivities, setBoatActivities] = useState<BoatActivityItem[]>([]);
 
     // Auto-advance Trip slider
     useEffect(() => {
@@ -65,6 +67,14 @@ export default function BookingDetailsPage() {
 
                 if (response.success && response.data) {
                     setOrder(response.data.order);
+
+                    const boatId = response.data.order.boat_id;
+                    if (boatId) {
+                        const boatResponse = await clientApi.getBoatById(boatId);
+                        if (boatResponse.success && boatResponse.data) {
+                            setBoatActivities(resolveBoatActivities(boatResponse.data.boat));
+                        }
+                    }
                 } else {
                     setError(response.error || "Failed to load booking details");
                 }
@@ -366,6 +376,11 @@ export default function BookingDetailsPage() {
                                 <p className="text-gray-600 leading-relaxed">
                                     {order.boat?.description || "No description available."}
                                 </p>
+                                {boatActivities.length > 0 && (
+                                    <div className="mt-6 pt-6 border-t border-gray-100">
+                                        <BoatActivitiesSection activities={boatActivities} />
+                                    </div>
+                                )}
                             </div>
                         </div>
 

@@ -6,6 +6,7 @@ import { FiEdit2, FiTrash2, FiSearch, FiImage, FiX, FiUpload, FiEye, FiUsers, Fi
 import Image from "next/image";
 import { useToast } from "../../ToastProvider";
 import ConfirmModal from "../../ConfirmModal";
+import BoatActivitiesSection, { resolveBoatActivities } from "@/components/boatDetails/BoatActivitiesSection";
 
 interface BoatFormData {
   name: string;
@@ -1287,6 +1288,13 @@ export default function AdminBoatListingLayout() {
                   <p className="text-sm leading-relaxed text-gray-600">
                     {viewDetailsBoat.description || "No description provided for this boat."}
                   </p>
+                </div>
+
+                <div className="mb-8">
+                  <BoatActivitiesSection
+                    activities={resolveBoatActivities(viewDetailsBoat)}
+                    variant="admin"
+                  />
                 </div>
 
                 {/* Owner Info Card */}

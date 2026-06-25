@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Rating } from '@smastrom/react-rating';
 import { clientApi, storage } from '@/lib/api';
 import type { BoatDetails } from '@/lib/api';
+import BoatActivitiesSection, { resolveBoatActivities } from '@/components/boatDetails/BoatActivitiesSection';
 import { FiDroplet, FiMessageCircle, FiCheckCircle, FiDollarSign } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
 
@@ -308,6 +309,11 @@ export default function WriteReviewPage() {
                   </svg>
                   <span className="text-sm font-medium text-[#00a63e]">Verified Booking</span>
                 </div>
+                {boat && (
+                  <div className="mt-6 pt-6 border-t border-gray-100">
+                    <BoatActivitiesSection activities={resolveBoatActivities(boat)} />
+                  </div>
+                )}
               </div>
 
               {/* Review Guidelines Card */}

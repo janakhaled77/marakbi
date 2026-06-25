@@ -86,6 +86,13 @@ export interface BoatFacilityDef {
   created_at: string;
 }
 
+// Boat Activity Types
+export interface BoatActivityItem {
+  id: number;
+  name: string;
+  image: string | null;
+}
+
 // Boat Types
 export interface Boat {
   id: number;
@@ -93,6 +100,7 @@ export interface Boat {
   description: string;
   categories: string[];
   activities?: string[];
+  activities_full?: BoatActivityItem[];
   cities?: string[];
   images: string[];
   price_per_hour: number;
@@ -1205,7 +1213,7 @@ export interface AdminBoat {
   facilities?: BoatFacilityDef[];
   activities?: string[];
   activities_id?: number[];
-  activities_full?: { id: number; name: string; image: string | null }[];
+  activities_full?: BoatActivityItem[];
   // Children pricing
   children_allowed?: boolean;
   child_price?: number | null;
