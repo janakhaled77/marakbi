@@ -4,16 +4,16 @@ const AboutApp = () => {
   return (
     <section className="py-8 sm:py-20">
       <div className="text-center mb-8 sm:mb-16">
-          <p className="text-4xl sm:text-4xl lg:text-5xl font-signpainter text-[#927C4E] mb-2 sm:mb-4">
+        <p className="text-4xl sm:text-4xl lg:text-5xl font-signpainter text-[#927C4E] mb-2 sm:mb-4">
           What is DAFFA
-          </p>
-          <h2 className="text-5xl sm:text-5xl lg:text-6xl font-bold text-black font-poppins mb-4 sm:mb-6">
+        </p>
+        <h2 className="text-5xl sm:text-5xl lg:text-6xl font-bold text-black font-poppins mb-4 sm:mb-6">
           About us
-          </h2>
-          <p className="text-base sm:text-xl text-gray-400 font-poppins max-w-4xl mx-auto leading-relaxed">
+        </h2>
+        <p className="text-base sm:text-xl text-gray-400 font-poppins max-w-4xl mx-auto leading-relaxed">
           Discover the soul of Egypt&apos;s waters with DAFFA. We connect you with authentic local captains and unforgettable journeys across the country&apos;s seas and rivers.
-          </p>
-        </div>
+        </p>
+      </div>
 
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-start">
@@ -72,7 +72,7 @@ const AboutApp = () => {
           {/* Right Side: Image */}
           <div className="flex justify-center lg:justify-end mt-6 lg:mt-0">
             <Image
-              src="/images/image 1.webp"
+              src="/images/image 1.png"
               alt="Boat Image"
               width={640}
               height={661}
