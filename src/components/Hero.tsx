@@ -128,7 +128,7 @@ const Hero = () => {
   const backgroundImages = [
     "/images/hero-1.webp",
     "/images/caranaval2.webp",
-    "/images/carnaval.webp"
+    "/images/carnaval.png"
   ];
 
   // Load cities on mount (no auth required)
@@ -362,7 +362,7 @@ const Hero = () => {
                   onClick={() => handleImageClick(2)}
                 >
                   <Image
-                    src="/images/carnaval.webp"
+                    src="/images/carnaval.png"
                     alt="Featured activity 3"
                     width={176}
                     height={160}

@@ -864,8 +864,6 @@ export default function BoatDetailsPage() {
               </section>
             )}
 
-            <BoatActivitiesSection activities={resolveBoatActivities(boat)} />
-
             <section>
               <h2 className="text-2xl font-semibold mb-4 font-poppins">Meet Your Captain</h2>
               <div className="bg-gray-50 rounded-lg p-6">
@@ -1016,6 +1014,8 @@ export default function BoatDetailsPage() {
                 </div>
               </div>
             </section>
+
+            <BoatActivitiesSection activities={resolveBoatActivities(boat)} />
 
             {/* Recommendations - Same Operator */}
             {(sameRecs.length > 0 || sameRecPage > 1) && (

@@ -8,6 +8,25 @@ import { normalizeImageUrl } from "@/lib/imageUtils";
 
 const ITEMS_PER_PAGE = 3;
 
+function getActivityImage(name: string, image?: string | null) {
+  if (image) return normalizeImageUrl(image);
+
+  const title = name.toLowerCase();
+  if (title.includes("kayak") || title.includes("kayaking")) {
+    return "/images/hero-2.webp";
+  }
+  if (title.includes("fishing")) {
+    return "/images/hero-1.webp";
+  }
+  if (title.includes("sunset") || title.includes("sail") || title.includes("boat")) {
+    return "/images/hero-3.webp";
+  }
+  if (title.includes("carnaval") || title.includes("carnival")) {
+    return "/images/carnaval.png";
+  }
+  return "/images/hero-1.webp";
+}
+
 export function resolveBoatActivities(boat: {
   activities_full?: BoatActivityItem[];
   activities?: string[];
@@ -96,27 +115,24 @@ export default function BoatActivitiesSection({
         {visibleActivities.map((activity) => (
           <div
             key={activity.id}
-            className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-xl p-4 hover:shadow-lg transition group"
+            className="text-left bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 relative rounded-lg overflow-hidden bg-white shadow-sm flex-shrink-0">
-                {activity.image ? (
-                  <Image
-                    src={normalizeImageUrl(activity.image)}
-                    alt={activity.name}
-                    fill
-                    className="object-cover"
-                    sizes="48px"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <FiActivity size={24} className="text-emerald-400" />
-                  </div>
-                )}
+            <div className="relative h-36 sm:h-40">
+              <Image
+                src={getActivityImage(activity.name, activity.image)}
+                alt={activity.name}
+                fill
+                className="object-cover"
+                sizes="300px"
+              />
+            </div>
+            <div className="p-3 sm:p-4">
+              <p className="font-semibold text-sm sm:text-base text-black truncate">{activity.name}</p>
+              <p className="text-xs text-gray-500 mt-2 line-clamp-2">Enjoy this operator-led activity with a boat experience tailored to your trip.</p>
+              <div className="flex items-center justify-between mt-4">
+                <span className="text-xs text-[#093b77] font-semibold">Included</span>
+                <span className="text-xs text-gray-500">Operator-led</span>
               </div>
-              <h3 className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">
-                {activity.name}
-              </h3>
             </div>
           </div>
         ))}
