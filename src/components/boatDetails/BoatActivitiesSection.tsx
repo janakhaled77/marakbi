@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { FiActivity } from "react-icons/fi";
-import { BoatActivityItem } from "@/lib/api";
+import { BoatActivityItem, Trip } from "@/lib/api";
 import { normalizeImageUrl } from "@/lib/imageUtils";
 
 const ITEMS_PER_PAGE = 3;
@@ -48,23 +48,40 @@ export function resolveBoatActivities(boat: {
 
 interface BoatActivitiesSectionProps {
   activities: BoatActivityItem[];
+  trips?: Trip[];
   variant?: "public" | "admin";
 }
 
 export default function BoatActivitiesSection({
   activities,
+  trips = [],
   variant = "public",
 }: BoatActivitiesSectionProps) {
   const [page, setPage] = useState(1);
-  const totalPages = Math.max(1, Math.ceil(activities.length / ITEMS_PER_PAGE));
+
+  // Combine activities and trips into a single list of display items
+  const combinedItems: Array<{
+    id: number | string;
+    type: "activity" | "trip";
+    name: string;
+    image?: string | null;
+    description?: string;
+    price?: number;
+    voyage_hours?: number;
+  }> = [
+    ...activities.map((a) => ({ id: `a-${a.id}`, type: 'activity' as const, name: a.name, image: a.image })),
+    ...((trips || []).map((t) => ({ id: `t-${t.id}`, type: 'trip' as const, name: t.name, image: t.images?.[0] ?? null, description: t.description, price: t.total_price, voyage_hours: t.voyage_hours }))),
+  ];
+
+  const totalPages = Math.max(1, Math.ceil(combinedItems.length / ITEMS_PER_PAGE));
   const start = (page - 1) * ITEMS_PER_PAGE;
-  const visibleActivities = activities.slice(start, start + ITEMS_PER_PAGE);
+  const visibleActivities = combinedItems.slice(start, start + ITEMS_PER_PAGE);
 
   useEffect(() => {
     setPage(1);
   }, [activities]);
 
-  if (activities.length === 0) {
+  if (combinedItems.length === 0) {
     return null;
   }
 
@@ -112,27 +129,43 @@ export default function BoatActivitiesSection({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {visibleActivities.map((activity) => (
+        {visibleActivities.map((item) => (
           <div
-            key={activity.id}
+            key={item.id}
             className="text-left bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition"
           >
             <div className="relative h-36 sm:h-40">
               <Image
-                src={getActivityImage(activity.name, activity.image)}
-                alt={activity.name}
+                src={
+                  item.type === 'activity'
+                    ? getActivityImage(item.name, item.image)
+                    : (item.image ? normalizeImageUrl(item.image) : '/images/hero-1.webp')
+                }
+                alt={item.name}
                 fill
                 className="object-cover"
                 sizes="300px"
               />
             </div>
             <div className="p-3 sm:p-4">
-              <p className="font-semibold text-sm sm:text-base text-black truncate">{activity.name}</p>
-              <p className="text-xs text-gray-500 mt-2 line-clamp-2">Enjoy this operator-led activity with a boat experience tailored to your trip.</p>
-              <div className="flex items-center justify-between mt-4">
-                <span className="text-xs text-[#093b77] font-semibold">Included</span>
-                <span className="text-xs text-gray-500">Operator-led</span>
-              </div>
+              <p className="font-semibold text-sm sm:text-base text-black truncate">{item.name}</p>
+              {item.type === 'trip' ? (
+                <>
+                  <p className="text-xs text-gray-500 mt-2 line-clamp-2">{item.description ?? 'Trip package provided by the operator.'}</p>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-xs text-[#093b77] font-semibold">EGP {item.price ?? '-'}</span>
+                    <span className="text-xs text-gray-500">{item.voyage_hours ?? '-'}h</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-gray-500 mt-2 line-clamp-2">Enjoy this operator-led activity with a boat experience tailored to your trip.</p>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-xs text-[#093b77] font-semibold">Included</span>
+                    <span className="text-xs text-gray-500">Operator-led</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         ))}

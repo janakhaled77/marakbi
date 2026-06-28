@@ -1293,6 +1293,7 @@ export default function AdminBoatListingLayout() {
                 <div className="mb-8">
                   <BoatActivitiesSection
                     activities={resolveBoatActivities(viewDetailsBoat)}
+                    trips={viewDetailsBoat.trips}
                     variant="admin"
                   />
                 </div>

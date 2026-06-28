@@ -1015,7 +1015,7 @@ export default function BoatDetailsPage() {
               </div>
             </section>
 
-            <BoatActivitiesSection activities={resolveBoatActivities(boat)} />
+            <BoatActivitiesSection activities={resolveBoatActivities(boat)} trips={boat.trips} />
 
             {/* Recommendations - Same Operator */}
             {(sameRecs.length > 0 || sameRecPage > 1) && (

@@ -32,6 +32,7 @@ export default function BookingDetailsPage() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [currentBoatImageIndex, setCurrentBoatImageIndex] = useState(0); // For Boat Slider
     const [boatActivities, setBoatActivities] = useState<BoatActivityItem[]>([]);
+    const [boatTrips, setBoatTrips] = useState<any[]>([]);
 
     // Auto-advance Trip slider
     useEffect(() => {
@@ -73,6 +74,7 @@ export default function BookingDetailsPage() {
                         const boatResponse = await clientApi.getBoatById(boatId);
                         if (boatResponse.success && boatResponse.data) {
                             setBoatActivities(resolveBoatActivities(boatResponse.data.boat));
+                            setBoatTrips(boatResponse.data.boat.trips || []);
                         }
                     }
                 } else {
@@ -364,7 +366,7 @@ export default function BookingDetailsPage() {
                                         <FiMapPin size={16} /> {order.boat?.cities?.[0] || location}
                                     </div>
                                     {/* Display Rating on Boat Card */}
-                                    <div className="flex items-center gap-1.5 text-xs font-semibold bg-white/20 backdrop-blur-sm px-2 py-1 rounded-md inline-flex">
+                                    <div className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/20 backdrop-blur-sm px-2 py-1 rounded-md">
                                         <FiStar className="text-yellow-400 fill-yellow-400" />
                                         <span>{order.boat?.average_rating || "New"}</span>
                                         {order.boat?.total_reviews ? <span className="font-normal opacity-80">({order.boat.total_reviews})</span> : null}
@@ -378,7 +380,7 @@ export default function BookingDetailsPage() {
                                 </p>
                                 {boatActivities.length > 0 && (
                                     <div className="mt-6 pt-6 border-t border-gray-100">
-                                        <BoatActivitiesSection activities={boatActivities} />
+                                        <BoatActivitiesSection activities={boatActivities} trips={boatTrips} />
                                     </div>
                                 )}
                             </div>

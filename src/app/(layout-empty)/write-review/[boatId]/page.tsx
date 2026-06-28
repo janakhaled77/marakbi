@@ -311,7 +311,7 @@ export default function WriteReviewPage() {
                 </div>
                 {boat && (
                   <div className="mt-6 pt-6 border-t border-gray-100">
-                    <BoatActivitiesSection activities={resolveBoatActivities(boat)} />
+                    <BoatActivitiesSection activities={resolveBoatActivities(boat)} trips={boat.trips} />
                   </div>
                 )}
               </div>
